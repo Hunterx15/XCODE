@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import axiosClient from "../utils/axiosClient";
 import { logoutUser } from "../authSlice";
 
 function Homepage() {
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   const [problems, setProblems] = useState([]);
   const [solvedProblems, setSolvedProblems] = useState([]);
@@ -16,7 +17,19 @@ function Homepage() {
     status: "all",
   });
 
+  /* ================= AUTH GUARD ================= */
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+    }
+  }, [navigate]);
+
+  /* ================= FETCH PROBLEMS ================= */
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token || !isAuthenticated) return;
+
     const fetchProblems = async () => {
       try {
         const { data } = await axiosClient.get("/problem/getAllProblem");
@@ -38,14 +51,17 @@ function Homepage() {
     };
 
     fetchProblems();
-    if (user) fetchSolvedProblems();
-  }, [user]);
+    fetchSolvedProblems();
+  }, [isAuthenticated]);
 
+  /* ================= LOGOUT ================= */
   const handleLogout = () => {
     dispatch(logoutUser());
     setSolvedProblems([]);
+    navigate("/login");
   };
 
+  /* ================= FILTER ================= */
   const filteredProblems = problems.filter((problem) => {
     const difficultyMatch =
       filters.difficulty === "all" ||
@@ -110,10 +126,7 @@ function Homepage() {
                 className="select select-sm select-bordered"
                 value={filters.status}
                 onChange={(e) =>
-                  setFilters({
-                    ...filters,
-                    status: e.target.value,
-                  })
+                  setFilters({ ...filters, status: e.target.value })
                 }
               >
                 <option value="all">All Problems</option>
@@ -124,10 +137,7 @@ function Homepage() {
                 className="select select-sm select-bordered"
                 value={filters.difficulty}
                 onChange={(e) =>
-                  setFilters({
-                    ...filters,
-                    difficulty: e.target.value,
-                  })
+                  setFilters({ ...filters, difficulty: e.target.value })
                 }
               >
                 <option value="all">All Difficulty</option>
@@ -140,10 +150,7 @@ function Homepage() {
                 className="select select-sm select-bordered"
                 value={filters.tag}
                 onChange={(e) =>
-                  setFilters({
-                    ...filters,
-                    tag: e.target.value,
-                  })
+                  setFilters({ ...filters, tag: e.target.value })
                 }
               >
                 <option value="all">All Tags</option>
@@ -212,7 +219,6 @@ function Homepage() {
 }
 
 /* ================= HELPERS ================= */
-
 const getDifficultyBadgeColor = (difficulty) => {
   switch (difficulty.toLowerCase()) {
     case "easy":
