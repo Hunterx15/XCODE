@@ -16,9 +16,12 @@ function App() {
   const dispatch = useDispatch();
   const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
 
-  // check initial authentication
+  // ✅ FIXED: check auth only if token exists
   useEffect(() => {
-    dispatch(checkAuth());
+    const token = localStorage.getItem("token");
+    if (token) {
+      dispatch(checkAuth());
+    }
   }, [dispatch]);
 
   if (loading) {
@@ -30,85 +33,90 @@ function App() {
   }
 
   return (
-    <>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            isAuthenticated ? <Homepage></Homepage> : <Navigate to="/signup" />
-          }
-        ></Route>
-        <Route
-          path="/login"
-          element={isAuthenticated ? <Navigate to="/" /> : <Login></Login>}
-        ></Route>
-        <Route
-          path="/signup"
-          element={isAuthenticated ? <Navigate to="/" /> : <Signup></Signup>}
-        ></Route>
-        <Route
-          path="/admin"
-          element={
-            isAuthenticated && user?.role === "admin" ? (
-              <Admin />
-            ) : (
-              <Navigate to="/" />
-            )
-          }
-        />
-        <Route
-          path="/admin/create"
-          element={
-            isAuthenticated && user?.role === "admin" ? (
-              <AdminPanel />
-            ) : (
-              <Navigate to="/" />
-            )
-          }
-        />
-        <Route
-          path="/admin/delete"
-          element={
-            isAuthenticated && user?.role === "admin" ? (
-              <AdminDelete />
-            ) : (
-              <Navigate to="/" />
-            )
-          }
-        />
-        <Route
-          path="/admin/video"
-          element={
-            isAuthenticated && user?.role === "admin" ? (
-              <AdminVideo />
-            ) : (
-              <Navigate to="/" />
-            )
-          }
-        />
-        <Route
-          path="/admin/upload/:problemId"
-          element={
-            isAuthenticated && user?.role === "admin" ? (
-              <AdminUpload />
-            ) : (
-              <Navigate to="/" />
-            )
-          }
-        />
-        <Route path="/problem/:problemId" element={<ProblemPage />}></Route>
-        <Route
-          path="/admin/update"
-          element={
-            isAuthenticated && user?.role === "admin" ? (
-              <AdminPanel />
-            ) : (
-              <Navigate to="/" />
-            )
-          }
-        />
-      </Routes>
-    </>
+    <Routes>
+      <Route
+        path="/"
+        element={isAuthenticated ? <Homepage /> : <Navigate to="/signup" />}
+      />
+
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/" /> : <Login />}
+      />
+
+      <Route
+        path="/signup"
+        element={isAuthenticated ? <Navigate to="/" /> : <Signup />}
+      />
+
+      <Route
+        path="/admin"
+        element={
+          isAuthenticated && user?.role === "admin" ? (
+            <Admin />
+          ) : (
+            <Navigate to="/" />
+          )
+        }
+      />
+
+      <Route
+        path="/admin/create"
+        element={
+          isAuthenticated && user?.role === "admin" ? (
+            <AdminPanel />
+          ) : (
+            <Navigate to="/" />
+          )
+        }
+      />
+
+      <Route
+        path="/admin/delete"
+        element={
+          isAuthenticated && user?.role === "admin" ? (
+            <AdminDelete />
+          ) : (
+            <Navigate to="/" />
+          )
+        }
+      />
+
+      <Route
+        path="/admin/video"
+        element={
+          isAuthenticated && user?.role === "admin" ? (
+            <AdminVideo />
+          ) : (
+            <Navigate to="/" />
+          )
+        }
+      />
+
+      <Route
+        path="/admin/upload/:problemId"
+        element={
+          isAuthenticated && user?.role === "admin" ? (
+            <AdminUpload />
+          ) : (
+            <Navigate to="/" />
+          )
+        }
+      />
+
+      <Route path="/problem/:problemId" element={<ProblemPage />} />
+
+      <Route
+        path="/admin/update"
+        element={
+          isAuthenticated && user?.role === "admin" ? (
+            <AdminPanel />
+          ) : (
+            <Navigate to="/" />
+          )
+        }
+      />
+    </Routes>
   );
 }
 

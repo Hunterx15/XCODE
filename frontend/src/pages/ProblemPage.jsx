@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import Editor from "@monaco-editor/react";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import axiosClient from "../utils/axiosClient";
 import SubmissionHistory from "../components/SubmissionHistory";
 import ChatAi from "../components/ChatAi";
@@ -34,6 +34,7 @@ const getDifficultyBadge = d =>
 
 const ProblemPage = () => {
   const { problemId } = useParams();
+  const navigate = useNavigate();
   useForm();
 
   const [problem, setProblem] = useState(null);
@@ -47,8 +48,19 @@ const ProblemPage = () => {
 
   const editorRef = useRef(null);
 
+  /* ---------------- AUTH GUARD ---------------- */
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+    }
+  }, [navigate]);
+
   /* ---------------- FETCH PROBLEM ---------------- */
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
     const fetchProblem = async () => {
       setLoading(true);
       try {
@@ -63,8 +75,9 @@ const ProblemPage = () => {
         setLoading(false);
       }
     };
+
     fetchProblem();
-  }, [problemId]);
+  }, [problemId, selectedLanguage]);
 
   /* ---------------- LANGUAGE CHANGE ---------------- */
   useEffect(() => {
@@ -75,6 +88,12 @@ const ProblemPage = () => {
 
   /* ---------------- RUN ---------------- */
   const handleRun = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     setLoading(true);
     setRunResult(null);
     try {
@@ -93,6 +112,12 @@ const ProblemPage = () => {
 
   /* ---------------- SUBMIT ---------------- */
   const handleSubmitCode = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     setLoading(true);
     setSubmitResult(null);
     try {
@@ -146,7 +171,6 @@ const ProblemPage = () => {
 
         <div className="flex-1 overflow-y-auto p-5">
 
-          {/* ---------- DESCRIPTION (RESTORED) ---------- */}
           {activeLeftTab === "description" && (
             <>
               <div className="flex items-center gap-3 mb-4">
@@ -162,7 +186,6 @@ const ProblemPage = () => {
                 {problem.description}
               </pre>
 
-              {/* 🔥 EXAMPLES RESTORED */}
               <h3 className="mt-6 font-semibold">Examples</h3>
               {problem.visibleTestCases?.map((ex, i) => (
                 <div
@@ -244,7 +267,6 @@ const ProblemPage = () => {
               ))}
             </div>
 
-            {/* 🔥 Bigger editor */}
             <div className="flex-1">
               <Editor
                 height="100%"
@@ -267,94 +289,17 @@ const ProblemPage = () => {
           </>
         )}
 
-          {activeRightTab === 'testcase' && (
-            <div className="flex-1 p-4 overflow-y-auto">
-              <h3 className="font-semibold mb-4">Test Results</h3>
-              {runResult ? (
-                <div className={`alert ${runResult.success ? 'alert-success' : 'alert-error'} mb-4`}>
-                  <div>
-                    {runResult.success ? (
-                      <div>
-                        <h4 className="font-bold">✅ All test cases passed!</h4>
-                        <p className="text-sm mt-2">Runtime: {runResult.runtime+" sec"}</p>
-                        <p className="text-sm">Memory: {runResult.memory+" KB"}</p>
-                        
-                        <div className="mt-4 space-y-2">
-                          {runResult.testCases.map((tc, i) => (
-                            <div key={i} className="bg-base-100 p-3 rounded text-xs">
-                              <div className="font-mono">
-                                <div><strong>Input:</strong> {tc.stdin}</div>
-                                <div><strong>Expected:</strong> {tc.expected_output}</div>
-                                <div><strong>Output:</strong> {tc.stdout}</div>
-                                <div className={'text-green-600'}>
-                                  {'✓ Passed'}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <h4 className="font-bold">❌ Error</h4>
-                        <div className="mt-4 space-y-2">
-                          {runResult.testCases.map((tc, i) => (
-                            <div key={i} className="bg-base-100 p-3 rounded text-xs">
-                              <div className="font-mono">
-                                <div><strong>Input:</strong> {tc.stdin}</div>
-                                <div><strong>Expected:</strong> {tc.expected_output}</div>
-                                <div><strong>Output:</strong> {tc.stdout}</div>
-                                <div className={tc.status_id==3 ? 'text-green-600' : 'text-red-600'}>
-                                  {tc.status_id==3 ? '✓ Passed' : '✗ Failed'}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-gray-500">
-                  Click "Run" to test your code with the example test cases.
-                </div>
-              )}
-            </div>
-          )}
+        {activeRightTab === "testcase" && runResult && (
+          <div className="flex-1 p-4 overflow-y-auto">
+            <pre className="text-sm">{JSON.stringify(runResult, null, 2)}</pre>
+          </div>
+        )}
 
-        {activeRightTab === 'result' && (
-            <div className="flex-1 p-4 overflow-y-auto">
-              <h3 className="font-semibold mb-4">Submission Result</h3>
-              {submitResult ? (
-                <div className={`alert ${submitResult.accepted ? 'alert-success' : 'alert-error'}`}>
-                  <div>
-                    {submitResult.accepted ? (
-                      <div>
-                        <h4 className="font-bold text-lg">🎉 Accepted</h4>
-                        <div className="mt-4 space-y-2">
-                          <p>Test Cases Passed: {submitResult.passedTestCases}/{submitResult.totalTestCases}</p>
-                          <p>Runtime: {submitResult.runtime + " sec"}</p>
-                          <p>Memory: {submitResult.memory + "KB"} </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <h4 className="font-bold text-lg">❌ {submitResult.error}</h4>
-                        <div className="mt-4 space-y-2">
-                          <p>Test Cases Passed: {submitResult.passedTestCases}/{submitResult.totalTestCases}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-gray-500">
-                  Click "Submit" to submit your solution for evaluation.
-                </div>
-              )}
-            </div>
-          )}
+        {activeRightTab === "result" && submitResult && (
+          <div className="flex-1 p-4 overflow-y-auto">
+            <pre className="text-sm">{JSON.stringify(submitResult, null, 2)}</pre>
+          </div>
+        )}
       </div>
     </div>
   );
