@@ -14,7 +14,7 @@ const langMap = {
   javascript: "JavaScript",
 };
 
-/* ---------------- SAFE HELPER ---------------- */
+/* ---------------- HELPERS ---------------- */
 const getInitialCode = (problemData, language) => {
   if (!problemData?.startCode?.length) return "";
   const lang = langMap[language];
@@ -32,6 +32,28 @@ const getDifficultyBadge = d =>
     ? "badge-warning"
     : "badge-error";
 
+/* ---------------- FORMATTERS ---------------- */
+const formatRunResult = data => ({
+  success: data.success,
+  runtime: data.runtime,
+  memory: data.memory,
+  testCases: data.testCases.map((t, i) => ({
+    id: i + 1,
+    input: t.stdin,
+    expected: t.expected_output,
+    output: t.stdout,
+    status: t.status_id === 3 ? "Accepted" : "Failed",
+  })),
+});
+
+const formatSubmitResult = data => ({
+  accepted: data.accepted,
+  passed: data.passedTestCases,
+  total: data.totalTestCases,
+  runtime: data.runtime,
+  memory: data.memory,
+});
+
 const ProblemPage = () => {
   const { problemId } = useParams();
   const navigate = useNavigate();
@@ -41,8 +63,10 @@ const ProblemPage = () => {
   const [selectedLanguage, setSelectedLanguage] = useState("javascript");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+
   const [runResult, setRunResult] = useState(null);
   const [submitResult, setSubmitResult] = useState(null);
+
   const [activeLeftTab, setActiveLeftTab] = useState("description");
   const [activeRightTab, setActiveRightTab] = useState("code");
 
@@ -50,17 +74,11 @@ const ProblemPage = () => {
 
   /* ---------------- AUTH GUARD ---------------- */
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-    }
+    if (!localStorage.getItem("token")) navigate("/login");
   }, [navigate]);
 
   /* ---------------- FETCH PROBLEM ---------------- */
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
     const fetchProblem = async () => {
       setLoading(true);
       try {
@@ -75,9 +93,8 @@ const ProblemPage = () => {
         setLoading(false);
       }
     };
-
     fetchProblem();
-  }, [problemId, selectedLanguage]);
+  }, [problemId]);
 
   /* ---------------- LANGUAGE CHANGE ---------------- */
   useEffect(() => {
@@ -88,12 +105,6 @@ const ProblemPage = () => {
 
   /* ---------------- RUN ---------------- */
   const handleRun = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
     setLoading(true);
     setRunResult(null);
     try {
@@ -101,10 +112,10 @@ const ProblemPage = () => {
         `/submission/run/${problemId}`,
         { code, language: selectedLanguage }
       );
-      setRunResult(data);
+      setRunResult(formatRunResult(data));
       setActiveRightTab("testcase");
     } catch {
-      setRunResult({ error: "Execution failed" });
+      setRunResult({ error: true });
     } finally {
       setLoading(false);
     }
@@ -112,12 +123,6 @@ const ProblemPage = () => {
 
   /* ---------------- SUBMIT ---------------- */
   const handleSubmitCode = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
     setLoading(true);
     setSubmitResult(null);
     try {
@@ -125,16 +130,15 @@ const ProblemPage = () => {
         `/submission/submit/${problemId}`,
         { code, language: selectedLanguage }
       );
-      setSubmitResult(data);
+      setSubmitResult(formatSubmitResult(data));
       setActiveRightTab("result");
     } catch {
-      setSubmitResult({ error: "Submission failed" });
+      setSubmitResult({ error: true });
     } finally {
       setLoading(false);
     }
   };
 
-  /* ---------------- FAIL SAFE ---------------- */
   if (loading && !problem) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -151,13 +155,12 @@ const ProblemPage = () => {
     );
   }
 
-  /* ---------------- RENDER ---------------- */
   return (
     <div className="h-screen bg-base-200/80 flex gap-3 p-3">
 
       {/* ================= LEFT PANEL ================= */}
-      <div className="w-1/2 bg-base-100/50 backdrop-blur border rounded-xl flex flex-col overflow-hidden">
-        <div className="tabs tabs-boxed bg-base-200/60 p-2">
+      <div className="w-1/2 bg-base-100 border rounded-xl flex flex-col overflow-hidden">
+        <div className="tabs tabs-boxed p-2">
           {["description", "editorial", "solutions", "submissions", "chatAI"].map(tab => (
             <button
               key={tab}
@@ -171,18 +174,17 @@ const ProblemPage = () => {
 
         <div className="flex-1 overflow-y-auto p-5">
 
+          {/* DESCRIPTION */}
           {activeLeftTab === "description" && (
             <>
               <div className="flex items-center gap-3 mb-4">
-                <h1 className="text-2xl font-bold text-success">
-                  {problem.title}
-                </h1>
+                <h1 className="text-2xl font-bold">{problem.title}</h1>
                 <span className={`badge ${getDifficultyBadge(problem.difficulty)}`}>
                   {problem.difficulty}
                 </span>
               </div>
 
-              <pre className="whitespace-pre-wrap text-sm text-base-content/80">
+              <pre className="whitespace-pre-wrap text-sm">
                 {problem.description}
               </pre>
 
@@ -190,12 +192,12 @@ const ProblemPage = () => {
               {problem.visibleTestCases?.map((ex, i) => (
                 <div
                   key={i}
-                  className="bg-base-200/60 border p-3 rounded-lg mt-2 text-sm"
+                  className="bg-base-200 border p-3 rounded-lg mt-2 text-sm"
                 >
                   <div><b>Input:</b> {ex.input}</div>
                   <div><b>Output:</b> {ex.output}</div>
                   {ex.explanation && (
-                    <div className="text-base-content/70">
+                    <div className="opacity-70">
                       <b>Explanation:</b> {ex.explanation}
                     </div>
                   )}
@@ -204,6 +206,7 @@ const ProblemPage = () => {
             </>
           )}
 
+          {/* EDITORIAL */}
           {activeLeftTab === "editorial" && (
             <Editorial
               secureUrl={problem.secureUrl}
@@ -212,34 +215,37 @@ const ProblemPage = () => {
             />
           )}
 
+          {/* SOLUTIONS */}
           {activeLeftTab === "solutions" && (
             problem.referenceSolution?.length ? (
               problem.referenceSolution.map((sol, i) => (
                 <pre
                   key={i}
-                  className="bg-base-200/60 border p-4 rounded-lg mb-3 text-sm overflow-x-auto"
+                  className="bg-base-200 border p-4 rounded-lg mb-3 text-sm overflow-x-auto"
                 >
                   {sol.completeCode}
                 </pre>
               ))
             ) : (
-              <p className="text-base-content/60">
+              <p className="opacity-60">
                 Solve the problem to unlock solutions.
               </p>
             )
           )}
 
+          {/* SUBMISSIONS */}
           {activeLeftTab === "submissions" && (
             <SubmissionHistory problemId={problemId} />
           )}
 
+          {/* CHAT AI */}
           {activeLeftTab === "chatAI" && <ChatAi problem={problem} />}
         </div>
       </div>
 
       {/* ================= RIGHT PANEL ================= */}
-      <div className="w-1/2 bg-base-100/50 backdrop-blur border rounded-xl flex flex-col overflow-hidden">
-        <div className="tabs tabs-boxed bg-base-200/60 p-2">
+      <div className="w-1/2 bg-base-100 border rounded-xl flex flex-col overflow-hidden">
+        <div className="tabs tabs-boxed p-2">
           {["code", "testcase", "result"].map(tab => (
             <button
               key={tab}
@@ -251,6 +257,7 @@ const ProblemPage = () => {
           ))}
         </div>
 
+        {/* CODE */}
         {activeRightTab === "code" && (
           <>
             <div className="p-3 flex gap-2">
@@ -267,16 +274,14 @@ const ProblemPage = () => {
               ))}
             </div>
 
-            <div className="flex-1">
-              <Editor
-                height="100%"
-                theme="vs-dark"
-                language={selectedLanguage}
-                value={code}
-                onChange={v => setCode(v || "")}
-                onMount={editor => (editorRef.current = editor)}
-              />
-            </div>
+            <Editor
+              height="100%"
+              theme="vs-dark"
+              language={selectedLanguage}
+              value={code}
+              onChange={v => setCode(v || "")}
+              onMount={editor => (editorRef.current = editor)}
+            />
 
             <div className="p-3 flex justify-end gap-2">
               <button className="btn btn-outline btn-sm" onClick={handleRun}>
@@ -289,15 +294,42 @@ const ProblemPage = () => {
           </>
         )}
 
+        {/* RUN RESULT */}
         {activeRightTab === "testcase" && runResult && (
-          <div className="flex-1 p-4 overflow-y-auto">
-            <pre className="text-sm">{JSON.stringify(runResult, null, 2)}</pre>
+          <div className="p-4 space-y-3 overflow-y-auto">
+            <h2 className={`text-lg font-bold ${
+              runResult.success ? "text-success" : "text-error"
+            }`}>
+              {runResult.success ? "Accepted" : "Failed"}
+            </h2>
+
+            {runResult.testCases.map(tc => (
+              <details key={tc.id} className="border rounded p-3">
+                <summary className="cursor-pointer flex justify-between">
+                  <span>Test Case {tc.id}</span>
+                  <span className={tc.status === "Accepted" ? "text-success" : "text-error"}>
+                    {tc.status}
+                  </span>
+                </summary>
+                <pre className="mt-2 text-sm">Input: {tc.input}</pre>
+                <pre className="text-sm">Expected: {tc.expected}</pre>
+                <pre className="text-sm">Output: {tc.output}</pre>
+              </details>
+            ))}
           </div>
         )}
 
+        {/* SUBMIT RESULT */}
         {activeRightTab === "result" && submitResult && (
-          <div className="flex-1 p-4 overflow-y-auto">
-            <pre className="text-sm">{JSON.stringify(submitResult, null, 2)}</pre>
+          <div className="p-6 space-y-2">
+            <h2 className={`text-xl font-bold ${
+              submitResult.accepted ? "text-success" : "text-error"
+            }`}>
+              {submitResult.accepted ? "Accepted 🎉" : "Wrong Answer ❌"}
+            </h2>
+            <p>Passed: {submitResult.passed} / {submitResult.total}</p>
+            <p>Runtime: {submitResult.runtime}s</p>
+            <p>Memory: {submitResult.memory} KB</p>
           </div>
         )}
       </div>
