@@ -14,25 +14,45 @@ const submitRouter = require("./routes/submit");
 const aiRouter = require("./routes/aiChatting");
 const videoRouter = require("./routes/videoCreator");
 
-// trust proxy (required on Render)
+/* =======================
+   TRUST PROXY (REQUIRED)
+======================= */
 app.set("trust proxy", 1);
 
-// CORS
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true
-}));
+/* =======================
+   CORS CONFIG (FIXED)
+======================= */
+const corsOptions = {
+  origin: "https://xcode-kohl.vercel.app", // HARD CODED (safe & correct)
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
+/* IMPORTANT: CORS BEFORE ROUTES */
+app.use(cors(corsOptions));
+
+/* IMPORTANT: PRE-FLIGHT SUPPORT */
+app.options("*", cors(corsOptions));
+
+/* =======================
+   MIDDLEWARE
+======================= */
 app.use(express.json());
 app.use(cookieParser());
 
-// routes
+/* =======================
+   ROUTES
+======================= */
 app.use("/user", authRouter);
 app.use("/problem", problemRouter);
 app.use("/submission", submitRouter);
 app.use("/ai", aiRouter);
 app.use("/video", videoRouter);
 
+/* =======================
+   SERVER START
+======================= */
 const PORT = process.env.PORT || 5000;
 
 const InitalizeConnection = async () => {
@@ -41,10 +61,10 @@ const InitalizeConnection = async () => {
     console.log("DB Connected");
 
     app.listen(PORT, () => {
-      console.log("Server listening at port number: " + PORT);
+      console.log("Server listening at port number:", PORT);
     });
   } catch (err) {
-    console.error("Error:", err);
+    console.error("Error starting server:", err);
   }
 };
 
