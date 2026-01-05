@@ -1,23 +1,11 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: true,
+  baseURL: import.meta.env.VITE_API_URL, // e.g. https://xcode-uxcs.onrender.com
+  withCredentials: true,                 // ⭐ REQUIRED for cookies
   headers: {
     "Content-Type": "application/json",
   },
 });
-
-// 🔥 ATTACH TOKEN TO EVERY REQUEST
-axiosClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token"); // MUST EXIST
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
 
 export default axiosClient;

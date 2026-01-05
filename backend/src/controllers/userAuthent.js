@@ -12,43 +12,61 @@ const register = async (req, res) => {
   console.log("REGISTER BODY:", req.body);
 
   try {
-    // validate data
+    // 1️⃣ Validate request body
     validate(req.body);
 
     const { firstName, emailId, password } = req.body;
 
-    req.body.password = await bcrypt.hash(password, 10);
-    req.body.role = "user";
+    // 2️⃣ Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await User.create(req.body);
+    // 3️⃣ Create user
+    const user = await User.create({
+      firstName,
+      emailId,
+      password: hashedPassword,
+      role: "user",
+    });
 
+    // 4️⃣ Generate JWT
     const token = jwt.sign(
-      { _id: user._id, emailId: emailId, role: "user" },
+      { _id: user._id, emailId: user.emailId, role: user.role },
       process.env.JWT_KEY,
       { expiresIn: 60 * 60 }
     );
 
-    const reply = {
-      firstName: user.firstName,
-      emailId: user.emailId,
-      _id: user._id,
-      role: user.role,
-    };
-
-    // 🔥 FIXED COOKIE (NO LOGIC CHANGE)
+    // 5️⃣ Set secure cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,        // REQUIRED (HTTPS)
-      sameSite: "none",    // REQUIRED (cross-site)
+      secure: true,      // required on Render / HTTPS
+      sameSite: "none",  // required for cross-site cookies
       maxAge: 60 * 60 * 1000,
     });
 
+    // 6️⃣ Send response
     res.status(201).json({
-      user: reply,
-      message: "Logged In Successfully",
+      user: {
+        firstName: user.firstName,
+        emailId: user.emailId,
+        _id: user._id,
+        role: user.role,
+      },
+      message: "Registered successfully",
     });
   } catch (err) {
-    res.status(400).send("Error: " + err.message);
+    console.error("REGISTER ERROR:", err);
+
+    // 🔴 Duplicate email (MongoDB unique index)
+    if (err.code === 11000) {
+      return res.status(409).json({
+        message: "Email already registered",
+      });
+    }
+
+    // 🔴 Validation or other error
+    res.status(400).json({
+      message: err.message || "Registration failed",
+    });
   }
 };
 
