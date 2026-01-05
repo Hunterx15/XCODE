@@ -16,12 +16,8 @@ function App() {
   const dispatch = useDispatch();
   const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
 
-  // ✅ FIXED: check auth only if token exists
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      dispatch(checkAuth());
-    }
+    dispatch(checkAuth());
   }, [dispatch]);
 
   if (loading) {
