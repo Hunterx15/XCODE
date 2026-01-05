@@ -2,10 +2,22 @@ import axios from "axios";
 
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: true, // ⭐ REQUIRED FOR COOKIES
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
+
+// 🔥 ATTACH TOKEN TO EVERY REQUEST
+axiosClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token"); // MUST EXIST
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 export default axiosClient;
