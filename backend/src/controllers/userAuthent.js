@@ -3,14 +3,14 @@ const User = require("../models/user");
 const validate = require("../utils/validator");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const Submission = require("../models/submission");
+// const Submission = require("../models/submission");
+
+const isProd = process.env.NODE_ENV === "production";
 
 /* =======================
    REGISTER
 ======================= */
 const register = async (req, res) => {
-  console.log("REGISTER BODY:", req.body);
-
   try {
     // 1️⃣ Validate request body
     validate(req.body);
@@ -32,38 +32,37 @@ const register = async (req, res) => {
     const token = jwt.sign(
       { _id: user._id, emailId: user.emailId, role: user.role },
       process.env.JWT_KEY,
-      { expiresIn: 60 * 60 }
+      { expiresIn: "1h" }
     );
 
-    // 5️⃣ Set secure cookie
+    // 5️⃣ Set cookie (SAFE for localhost + production)
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,      // required on Render / HTTPS
-      sameSite: "none",  // required for cross-site cookies
+      secure: isProd,                 // ❗ only true in production
+      sameSite: isProd ? "none" : "lax",
       maxAge: 60 * 60 * 1000,
     });
 
     // 6️⃣ Send response
     res.status(201).json({
       user: {
+        _id: user._id,
         firstName: user.firstName,
         emailId: user.emailId,
-        _id: user._id,
         role: user.role,
       },
-      message: "Registered successfully",
+      message: "Registered Successfully",
     });
   } catch (err) {
     console.error("REGISTER ERROR:", err);
 
-    // 🔴 Duplicate email (MongoDB unique index)
+    // Duplicate email
     if (err.code === 11000) {
       return res.status(409).json({
         message: "Email already registered",
       });
     }
 
-    // 🔴 Validation or other error
     res.status(400).json({
       message: err.message || "Registration failed",
     });
@@ -77,42 +76,44 @@ const login = async (req, res) => {
   try {
     const { emailId, password } = req.body;
 
-    if (!emailId) throw new Error("Invalid Credentials");
-    if (!password) throw new Error("Invalid Credentials");
+    if (!emailId || !password) {
+      return res.status(401).json({ message: "Invalid Credentials" });
+    }
 
     const user = await User.findOne({ emailId });
-    if (!user) throw new Error("Invalid Credentials");
+    if (!user) {
+      return res.status(401).json({ message: "Invalid Credentials" });
+    }
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) throw new Error("Invalid Credentials");
-
-    const reply = {
-      firstName: user.firstName,
-      emailId: user.emailId,
-      _id: user._id,
-      role: user.role,
-    };
+    if (!match) {
+      return res.status(401).json({ message: "Invalid Credentials" });
+    }
 
     const token = jwt.sign(
-      { _id: user._id, emailId: emailId, role: user.role },
+      { _id: user._id, emailId: user.emailId, role: user.role },
       process.env.JWT_KEY,
-      { expiresIn: 60 * 60 }
+      { expiresIn: "1h" }
     );
 
-    // 🔥 FIXED COOKIE (NO LOGIC CHANGE)
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 60 * 60 * 1000,
     });
 
-    res.status(201).json({
-      user: reply,
+    res.status(200).json({
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        emailId: user.emailId,
+        role: user.role,
+      },
       message: "Logged In Successfully",
     });
   } catch (err) {
-    res.status(401).send("Error: " + err.message);
+    res.status(500).json({ message: "Login failed" });
   }
 };
 
@@ -126,19 +127,20 @@ const logout = async (req, res) => {
 
     const payload = jwt.decode(token);
 
-    await redisClient.set(`token:${token}`, "Blocked");
+    // Block token in redis
+    await redisClient.set(`token:${token}`, "blocked");
     await redisClient.expireAt(`token:${token}`, payload.exp);
 
-    res.cookie("token", null, {
+    res.cookie("token", "", {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      expires: new Date(Date.now()),
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
+      expires: new Date(0),
     });
 
     res.send("Logged Out Successfully");
   } catch (err) {
-    res.status(503).send("Error: " + err.message);
+    res.status(503).send("Logout Failed");
   }
 };
 
@@ -151,26 +153,31 @@ const adminRegister = async (req, res) => {
 
     const { firstName, emailId, password } = req.body;
 
-    req.body.password = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await User.create(req.body);
+    const user = await User.create({
+      firstName,
+      emailId,
+      password: hashedPassword,
+      role: "admin",
+    });
 
     const token = jwt.sign(
-      { _id: user._id, emailId: emailId, role: user.role },
+      { _id: user._id, emailId: user.emailId, role: "admin" },
       process.env.JWT_KEY,
-      { expiresIn: 60 * 60 }
+      { expiresIn: "1h" }
     );
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 60 * 60 * 1000,
     });
 
-    res.status(201).send("User Registered Successfully");
+    res.status(201).send("Admin Registered Successfully");
   } catch (err) {
-    res.status(400).send("Error: " + err.message);
+    res.status(400).json({ message: err.message });
   }
 };
 
@@ -184,7 +191,7 @@ const deleteProfile = async (req, res) => {
     await User.findByIdAndDelete(userId);
     // await Submission.deleteMany({ userId });
 
-    res.status(200).send("Deleted Successfully");
+    res.status(200).send("Profile Deleted Successfully");
   } catch (err) {
     res.status(500).send("Internal Server Error");
   }
