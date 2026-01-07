@@ -21,8 +21,13 @@ function App() {
     (state) => state.auth
   );
 
+  const authChecked = useRef(false);
+
   useEffect(() => {
-    dispatch(checkAuth());
+    if (!authChecked.current) {
+      dispatch(checkAuth());
+      authChecked.current = true;
+    }
   }, [dispatch]);
 
   if (loading) {
