@@ -1,6 +1,6 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { checkAuth } from "./authSlice";
 
@@ -15,39 +15,21 @@ import AdminVideo from "./components/AdminVideo";
 import AdminDelete from "./components/AdminDelete";
 import AdminUpload from "./components/AdminUpload";
 
-// ---------- PROTECTED ROUTE ----------
-function ProtectedRoute({ children }) {
-  const { isAuthenticated, loading } = useSelector((state) => state.auth);
-
-  if (loading) return null; // block navigation
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
-}
-
-// ---------- ADMIN ROUTE ----------
-function AdminRoute({ children }) {
-  const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
-
-  if (loading) return null;
-  if (!isAuthenticated || user?.role !== "admin") {
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
-}
-
 function App() {
   const dispatch = useDispatch();
-  const { loading, isAuthenticated } = useSelector((state) => state.auth);
+  const authChecked = useRef(false);
+
+  const { isAuthenticated, user, loading } = useSelector(
+    (state) => state.auth
+  );
 
   useEffect(() => {
-    dispatch(checkAuth());
+    if (!authChecked.current) {
+      dispatch(checkAuth());
+      authChecked.current = true;
+    }
   }, [dispatch]);
 
-  // Global loading screen (ONLY once)
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -58,79 +40,61 @@ function App() {
 
   return (
     <Routes>
-      {/* ---------- PUBLIC ROUTES ---------- */}
+      {/* PUBLIC */}
+      <Route path="/" element={<Homepage />} />
       <Route
         path="/login"
         element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
       />
-
       <Route
         path="/signup"
         element={isAuthenticated ? <Navigate to="/" replace /> : <Signup />}
       />
+      <Route path="/problem/:problemId" element={<ProblemPage />} />
 
-      {/* ---------- PROTECTED ROUTES ---------- */}
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Homepage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/problem/:problemId"
-        element={
-          <ProtectedRoute>
-            <ProblemPage />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* ---------- ADMIN ROUTES ---------- */}
+      {/* ADMIN */}
       <Route
         path="/admin"
         element={
-          <AdminRoute>
-            <Admin />
-          </AdminRoute>
+          isAuthenticated && user?.role === "admin"
+            ? <Admin />
+            : <Navigate to="/login" replace />
         }
       />
 
       <Route
         path="/admin/create"
         element={
-          <AdminRoute>
-            <AdminPanel />
-          </AdminRoute>
+          isAuthenticated && user?.role === "admin"
+            ? <AdminPanel />
+            : <Navigate to="/login" replace />
         }
       />
 
       <Route
         path="/admin/delete"
         element={
-          <AdminRoute>
-            <AdminDelete />
-          </AdminRoute>
+          isAuthenticated && user?.role === "admin"
+            ? <AdminDelete />
+            : <Navigate to="/login" replace />
         }
       />
 
       <Route
         path="/admin/video"
         element={
-          <AdminRoute>
-            <AdminVideo />
-          </AdminRoute>
+          isAuthenticated && user?.role === "admin"
+            ? <AdminVideo />
+            : <Navigate to="/login" replace />
         }
       />
 
       <Route
         path="/admin/upload/:problemId"
         element={
-          <AdminRoute>
-            <AdminUpload />
-          </AdminRoute>
+          isAuthenticated && user?.role === "admin"
+            ? <AdminUpload />
+            : <Navigate to="/login" replace />
         }
       />
     </Routes>
