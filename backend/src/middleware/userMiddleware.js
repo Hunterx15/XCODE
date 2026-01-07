@@ -1,46 +1,43 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-const redisClient = require("../config/redis")
+const redisClient = require("../config/redis");
 
-const userMiddleware = async (req,res,next)=>{
+const userMiddleware = async (req, res, next) => {
+  try {
+    const token = req.cookies?.token;
 
-    try{
-        
-        const {token} = req.cookies;
-        if(!token)
-            throw new Error("Token is not persent");
-
-        const payload = jwt.verify(token,process.env.JWT_KEY);
-
-        const {_id} = payload;
-
-        if(!_id){
-            throw new Error("Invalid token");
-        }
-
-        const result = await User.findById(_id);
-
-        if(!result){
-            throw new Error("User Doesn't Exist");
-        }
-
-        // Redis ke blockList mein persent toh nahi hai
-
-        const IsBlocked = await redisClient.exists(`token:${token}`);
-
-        if(IsBlocked)
-            throw new Error("Invalid Token");
-
-        req.result = result;
-
-
-        next();
-    }
-    catch(err){
-        res.status(401).send("Error: "+ err.message)
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
-}
+    // ✅ Verify token with correct secret
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const { _id } = payload;
 
+    if (!_id) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = await User.findById(_id);
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // ✅ Redis check should NOT crash auth
+    try {
+      const isBlocked = await redisClient.exists(`token:${token}`);
+      if (isBlocked) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    } catch {
+      // Redis down → allow request (fail-open)
+    }
+
+    req.result = user;
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+};
 
 module.exports = userMiddleware;
