@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import Editor from "@monaco-editor/react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router";
 import axiosClient from "../utils/axiosClient";
 import SubmissionHistory from "../components/SubmissionHistory";
 import ChatAi from "../components/ChatAi";

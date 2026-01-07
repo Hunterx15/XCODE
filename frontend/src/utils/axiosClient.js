@@ -1,11 +1,9 @@
-import axios from "axios";
+import axios from 'axios';
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, // e.g. https://xcode-uxcs.onrender.com
-  withCredentials: true,                 // ⭐ REQUIRED for cookies
-  headers: {
-    "Content-Type": "application/json",
-  },
+    // VITE_BACKEND_URL will be set in Render environment variables
+    baseURL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000',
+    withCredentials: true // CRITICAL: This allows cookies to be sent/received
 });
 
 export default axiosClient;

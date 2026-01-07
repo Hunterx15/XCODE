@@ -88,8 +88,13 @@ const saveVideoMetadata = async (req, res) => {
     // format: 'jpg'
     // });
 
-    const thumbnailUrl = cloudinary.image(cloudinaryResource.public_id, {
+    const thumbnailUrl = cloudinary.url(cloudinaryResource.public_id, {
       resource_type: "video",
+      format: "jpg", // Force a detailed image format
+      start_offset: "auto", // Auto select best frame
+      transformation: [
+        { width: 400, crop: "scale" }, // Resize to save bandwidth
+      ],
     });
 
     // https://cloudinary.com/documentation/video_effects_and_enhancements#video_thumbnails
