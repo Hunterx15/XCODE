@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 
@@ -15,17 +15,39 @@ import AdminVideo from "./components/AdminVideo";
 import AdminDelete from "./components/AdminDelete";
 import AdminUpload from "./components/AdminUpload";
 
+// ---------- PROTECTED ROUTE ----------
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, loading } = useSelector((state) => state.auth);
+
+  if (loading) return null; // block navigation
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
+// ---------- ADMIN ROUTE ----------
+function AdminRoute({ children }) {
+  const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
+
+  if (loading) return null;
+  if (!isAuthenticated || user?.role !== "admin") {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
 function App() {
   const dispatch = useDispatch();
-  const { isAuthenticated, user, loading } = useSelector(
-    (state) => state.auth
-  );
+  const { loading, isAuthenticated } = useSelector((state) => state.auth);
 
-  
   useEffect(() => {
     dispatch(checkAuth());
   }, [dispatch]);
 
+  // Global loading screen (ONLY once)
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -36,76 +58,79 @@ function App() {
 
   return (
     <Routes>
-      <Route
-        path="/"
-        element={isAuthenticated ? <Homepage /> : <Navigate to="/signup" />}
-      />
-
+      {/* ---------- PUBLIC ROUTES ---------- */}
       <Route
         path="/login"
-        element={isAuthenticated ? <Navigate to="/" /> : <Login />}
+        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
       />
 
       <Route
         path="/signup"
-        element={isAuthenticated ? <Navigate to="/" /> : <Signup />}
+        element={isAuthenticated ? <Navigate to="/" replace /> : <Signup />}
       />
 
-      <Route path="/problem/:problemId" element={<ProblemPage />} />
+      {/* ---------- PROTECTED ROUTES ---------- */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Homepage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/problem/:problemId"
+        element={
+          <ProtectedRoute>
+            <ProblemPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* ---------- ADMIN ROUTES ---------- */}
       <Route
         path="/admin"
         element={
-          isAuthenticated && user?.role === "admin" ? (
+          <AdminRoute>
             <Admin />
-          ) : (
-            <Navigate to="/" />
-          )
+          </AdminRoute>
         }
       />
 
       <Route
         path="/admin/create"
         element={
-          isAuthenticated && user?.role === "admin" ? (
+          <AdminRoute>
             <AdminPanel />
-          ) : (
-            <Navigate to="/" />
-          )
+          </AdminRoute>
         }
       />
 
       <Route
         path="/admin/delete"
         element={
-          isAuthenticated && user?.role === "admin" ? (
+          <AdminRoute>
             <AdminDelete />
-          ) : (
-            <Navigate to="/" />
-          )
+          </AdminRoute>
         }
       />
 
       <Route
         path="/admin/video"
         element={
-          isAuthenticated && user?.role === "admin" ? (
+          <AdminRoute>
             <AdminVideo />
-          ) : (
-            <Navigate to="/" />
-          )
+          </AdminRoute>
         }
       />
 
       <Route
         path="/admin/upload/:problemId"
         element={
-          isAuthenticated && user?.role === "admin" ? (
+          <AdminRoute>
             <AdminUpload />
-          ) : (
-            <Navigate to="/" />
-          )
+          </AdminRoute>
         }
       />
     </Routes>
