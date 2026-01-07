@@ -1,20 +1,25 @@
 import { Routes, Route, Navigate } from "react-router";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+
+import { checkAuth } from "./authSlice";
+
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Homepage from "./pages/Homepage";
-import { useDispatch, useSelector } from "react-redux";
-import { checkAuth } from "./authSlice";
-import { useEffect } from "react";
-import AdminPanel from "./components/AdminPanel";
 import ProblemPage from "./pages/ProblemPage";
+
 import Admin from "./pages/Admin";
+import AdminPanel from "./components/AdminPanel";
 import AdminVideo from "./components/AdminVideo";
 import AdminDelete from "./components/AdminDelete";
 import AdminUpload from "./components/AdminUpload";
 
 function App() {
   const dispatch = useDispatch();
-  const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
+  const { isAuthenticated, user, loading } = useSelector(
+    (state) => state.auth
+  );
 
   useEffect(() => {
     dispatch(checkAuth());
@@ -45,6 +50,9 @@ function App() {
         element={isAuthenticated ? <Navigate to="/" /> : <Signup />}
       />
 
+      <Route path="/problem/:problemId" element={<ProblemPage />} />
+
+      {/* ---------- ADMIN ROUTES ---------- */}
       <Route
         path="/admin"
         element={
@@ -94,19 +102,6 @@ function App() {
         element={
           isAuthenticated && user?.role === "admin" ? (
             <AdminUpload />
-          ) : (
-            <Navigate to="/" />
-          )
-        }
-      />
-
-      <Route path="/problem/:problemId" element={<ProblemPage />} />
-
-      <Route
-        path="/admin/update"
-        element={
-          isAuthenticated && user?.role === "admin" ? (
-            <AdminPanel />
           ) : (
             <Navigate to="/" />
           )
