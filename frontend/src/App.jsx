@@ -40,61 +40,89 @@ function App() {
 
   return (
     <Routes>
-      {/* PUBLIC */}
-      <Route path="/" element={<Homepage />} />
+      {/* ROOT (PROTECTED) */}
+      <Route
+        path="/"
+        element={
+          isAuthenticated ? (
+            <Homepage />
+          ) : (
+            <Navigate to="/signup" replace />
+          )
+        }
+      />
+
+      {/* AUTH */}
       <Route
         path="/login"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
+        element={
+          isAuthenticated ? <Navigate to="/" replace /> : <Login />
+        }
       />
+
       <Route
         path="/signup"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Signup />}
+        element={
+          isAuthenticated ? <Navigate to="/" replace /> : <Signup />
+        }
       />
+
+      {/* PUBLIC */}
       <Route path="/problem/:problemId" element={<ProblemPage />} />
 
       {/* ADMIN */}
       <Route
         path="/admin"
         element={
-          isAuthenticated && user?.role === "admin"
-            ? <Admin />
-            : <Navigate to="/login" replace />
+          isAuthenticated && user?.role === "admin" ? (
+            <Admin />
+          ) : (
+            <Navigate to="/signup" replace />
+          )
         }
       />
 
       <Route
         path="/admin/create"
         element={
-          isAuthenticated && user?.role === "admin"
-            ? <AdminPanel />
-            : <Navigate to="/login" replace />
+          isAuthenticated && user?.role === "admin" ? (
+            <AdminPanel />
+          ) : (
+            <Navigate to="/signup" replace />
+          )
         }
       />
 
       <Route
         path="/admin/delete"
         element={
-          isAuthenticated && user?.role === "admin"
-            ? <AdminDelete />
-            : <Navigate to="/login" replace />
+          isAuthenticated && user?.role === "admin" ? (
+            <AdminDelete />
+          ) : (
+            <Navigate to="/signup" replace />
+          )
         }
       />
 
       <Route
         path="/admin/video"
         element={
-          isAuthenticated && user?.role === "admin"
-            ? <AdminVideo />
-            : <Navigate to="/login" replace />
+          isAuthenticated && user?.role === "admin" ? (
+            <AdminVideo />
+          ) : (
+            <Navigate to="/signup" replace />
+          )
         }
       />
 
       <Route
         path="/admin/upload/:problemId"
         element={
-          isAuthenticated && user?.role === "admin"
-            ? <AdminUpload />
-            : <Navigate to="/login" replace />
+          isAuthenticated && user?.role === "admin" ? (
+            <AdminUpload />
+          ) : (
+            <Navigate to="/signup" replace />
+          )
         }
       />
     </Routes>
