@@ -1,4 +1,4 @@
-import {Routes, Route ,Navigate} from "react-router";
+import {Routes, Route ,Navigate} from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Homepage from "./pages/Homepage";
@@ -13,7 +13,6 @@ import AdminDelete from "./components/AdminDelete"
 import AdminUpload from "./components/AdminUpload"
 
 function App(){
-  console.log("VITE_API_URL =", import.meta.env.VITE_API_URL);
 
   const dispatch = useDispatch();
   const {isAuthenticated,user,loading} = useSelector((state)=>state.auth);

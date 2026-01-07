@@ -1,4 +1,4 @@
-import { useParams } from "react-router";
+import { useParams } from "react-router-dom";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";

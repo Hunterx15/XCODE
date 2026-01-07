@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Plus, Edit, Trash2, Video } from "lucide-react";
-import { NavLink } from "react-router";
+import { NavLink } from "react-router-dom";
 
 function Admin() {
   const [selectedOption, setSelectedOption] = useState(null);

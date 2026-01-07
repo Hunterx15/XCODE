@@ -2,7 +2,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import axiosClient from "../utils/axiosClient";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 
 /* ---------------- SCHEMA ---------------- */
 const problemSchema = z.object({
