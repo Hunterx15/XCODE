@@ -1,51 +1,49 @@
-const express = require("express");
+const express = require('express')
 const app = express();
-require("dotenv").config();
-
-const main = require("./config/db");
-const cookieParser = require("cookie-parser");
+require('dotenv').config();
+const main =  require('./config/db')
+const cookieParser =  require('cookie-parser');
 const authRouter = require("./routes/userAuth");
-const redisClient = require("./config/redis");
+const redisClient = require('./config/redis');
 const problemRouter = require("./routes/problemCreator");
-const submitRouter = require("./routes/submit");
-const aiRouter = require("./routes/aiChatting");
+const submitRouter = require("./routes/submit")
+const aiRouter = require("./routes/aiChatting")
 const videoRouter = require("./routes/videoCreator");
-const cors = require("cors");
+const cors = require('cors')
 
-// ✅ REQUIRED for Render + secure cookies
-app.set("trust proxy", 1);
+// console.log("Hello")
 
-// CORS
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL,
-    credentials: true,
-  })
-);
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true 
+}))
 
 app.use(express.json());
 app.use(cookieParser());
 
-// routes
-app.use("/user", authRouter);
-app.use("/problem", problemRouter);
-app.use("/submission", submitRouter);
-app.use("/ai", aiRouter);
-app.use("/video", videoRouter);
+app.use('/user',authRouter);
+app.use('/problem',problemRouter);
+app.use('/submission',submitRouter);
+app.use('/ai',aiRouter);
+app.use("/video",videoRouter);
 
-const PORT = process.env.PORT || 3000;
 
-const InitalizeConnection = async () => {
-  try {
-    await Promise.all([main(), redisClient.connect()]);
-    console.log("DB Connected");
+const InitalizeConnection = async ()=>{
+    try{
 
-    app.listen(PORT, () => {
-      console.log("Server listening at port number: " + PORT);
-    });
-  } catch (err) {
-    console.log("Error: " + err);
-  }
-};
+        await Promise.all([main(),redisClient.connect()]);
+        console.log("DB Connected");
+        
+        app.listen(process.env.PORT, ()=>{
+            console.log("Server listening at port number: "+ process.env.PORT);
+        })
+
+    }
+    catch(err){
+        console.log("Error: "+err);
+    }
+}
+
 
 InitalizeConnection();
+
