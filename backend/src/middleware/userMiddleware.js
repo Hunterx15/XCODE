@@ -1,42 +1,31 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/user");
 const redisClient = require("../config/redis");
 
-const userMiddleware = async (req, res, next) => {
+const auth = async (req, res, next) => {
   try {
-    // 1️⃣ token must exist
     const token = req.cookies?.token;
     if (!token) {
-      return res.status(401).send("Unauthorized: Token missing");
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // 2️⃣ verify token
-    const payload = jwt.verify(token, process.env.JWT_KEY);
-    const { _id } = payload;
-
-    if (!_id) {
-      return res.status(401).send("Unauthorized: Invalid token");
-    }
-
-    // 3️⃣ check user exists
-    const result = await User.findById(_id);
-    if (!result) {
-      return res.status(401).send("Unauthorized: User not found");
-    }
-
-    // 4️⃣ check Redis blacklist
+    // Check Redis blacklist
     const isBlocked = await redisClient.exists(`token:${token}`);
     if (isBlocked) {
-      return res.status(401).send("Unauthorized: Token blocked");
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // 5️⃣ attach user (THIS IS REQUIRED)
-    req.result = result;
+    const decoded = jwt.verify(token, process.env.JWT_KEY);
+
+    req.user = {
+      _id: decoded._id,
+      emailId: decoded.emailId,
+      role: decoded.role,
+    };
 
     next();
-  } catch (err) {
-    return res.status(401).send("Unauthorized");
+  } catch {
+    return res.status(401).json({ message: "Unauthorized" });
   }
 };
 
-module.exports = userMiddleware;
+module.exports = auth;

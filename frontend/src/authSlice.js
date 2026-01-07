@@ -7,13 +7,12 @@ export const registerUser = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       const res = await axiosClient.post("/user/register", userData);
-
-      // 🔐 SAVE TOKEN
-      localStorage.setItem("token", res.data.token);
-
+      // Cookie is set by backend
       return res.data.user;
     } catch (error) {
-      return rejectWithValue(error.response?.data || "Register failed");
+      return rejectWithValue(
+        error.response?.data?.message || "Register failed"
+      );
     }
   }
 );
@@ -24,13 +23,12 @@ export const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const res = await axiosClient.post("/user/login", credentials);
-
-      // 🔐 SAVE TOKEN
-      localStorage.setItem("token", res.data.token);
-
+      // Cookie is set by backend
       return res.data.user;
     } catch (error) {
-      return rejectWithValue(error.response?.data || "Login failed");
+      return rejectWithValue(
+        error.response?.data?.message || "Login failed"
+      );
     }
   }
 );
@@ -39,19 +37,10 @@ export const loginUser = createAsyncThunk(
 export const checkAuth = createAsyncThunk(
   "auth/check",
   async (_, { rejectWithValue }) => {
-    const token = localStorage.getItem("token");
-
-    // 🚨 NO TOKEN → DON'T CALL API
-    if (!token) {
-      return rejectWithValue("No token");
-    }
-
     try {
-      const { data } = await axiosClient.get("/user/check");
+      const { data } = await axiosClient.get("/user/me");
       return data.user;
-    } catch (error) {
-      // ❌ INVALID TOKEN → CLEAR IT
-      localStorage.removeItem("token");
+    } catch {
       return rejectWithValue("Unauthorized");
     }
   }
@@ -60,9 +49,13 @@ export const checkAuth = createAsyncThunk(
 /* ================= LOGOUT ================= */
 export const logoutUser = createAsyncThunk(
   "auth/logout",
-  async () => {
-    localStorage.removeItem("token");
-    return null;
+  async (_, { rejectWithValue }) => {
+    try {
+      await axiosClient.post("/user/logout");
+      return null;
+    } catch {
+      return rejectWithValue("Logout failed");
+    }
   }
 );
 

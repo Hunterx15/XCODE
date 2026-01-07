@@ -1,36 +1,30 @@
-const express = require('express');
+const express = require("express");
+const router = express.Router();
 
-const authRouter =  express.Router();
-const {register, login,logout, adminRegister,deleteProfile} = require('../controllers/userAuthent')
-const userMiddleware = require("../middleware/userMiddleware");
-const adminMiddleware = require('../middleware/adminMiddleware');
+const {
+  register,
+  login,
+  logout,
+  adminRegister,
+  deleteProfile,
+} = require("../controllers/userAuthent");
 
-// Register
-authRouter.post('/register', register);
-authRouter.post('/login', login);
-authRouter.post('/logout', userMiddleware, logout);
-authRouter.post('/admin/register', adminMiddleware ,adminRegister);
-authRouter.delete('/deleteProfile',userMiddleware,deleteProfile);
-authRouter.get('/check',userMiddleware,(req,res)=>{
+const auth = require("../middleware/auth");
+const adminMiddleware = require("../middleware/adminMiddleware");
 
-    const reply = {
-        firstName: req.result.firstName,
-        emailId: req.result.emailId,
-        _id:req.result._id,
-        role:req.result.role,
-    }
+// Public
+router.post("/register", register);
+router.post("/login", login);
 
-    res.status(200).json({
-        user:reply,
-        message:"Valid User"
-    });
-})
-// authRouter.get('/getProfile',getProfile);
+// Protected
+router.post("/logout", auth, logout);
+router.get("/me", auth, (req, res) => {
+  res.status(200).json({ user: req.user });
+});
+router.delete("/deleteProfile", auth, deleteProfile);
 
+// Admin
+router.post("/admin/register", auth, adminMiddleware, adminRegister);
 
-module.exports = authRouter;
-
-// login
-// logout
-// GetProfile
+module.exports = router;
 
