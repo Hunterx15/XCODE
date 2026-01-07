@@ -39,7 +39,7 @@ export const checkAuth = createAsyncThunk(
       const res = await axiosClient.get("/user/check");
       return res.data.user;
     } catch (error) {
-      // 401 = user not logged in → normal case
+      // 401 = not logged in (NORMAL, not an error)
       if (error.response?.status === 401) {
         return rejectWithValue(null);
       }
@@ -58,6 +58,7 @@ export const logoutUser = createAsyncThunk(
       await axiosClient.post("/user/logout");
       return null;
     } catch (error) {
+      // Even if logout fails on backend, frontend should reset state
       return rejectWithValue(
         error.response?.data || { message: "Logout failed" }
       );
@@ -71,7 +72,7 @@ const authSlice = createSlice({
   initialState: {
     user: null,
     isAuthenticated: false,
-    loading: false,
+    loading: true, // IMPORTANT: true until checkAuth finishes
     error: null,
   },
   reducers: {},
@@ -117,16 +118,23 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload;
         state.isAuthenticated = true;
+        state.error = null;
       })
       .addCase(checkAuth.rejected, (state) => {
         state.loading = false;
         state.user = null;
         state.isAuthenticated = false;
-        state.error = null; // IMPORTANT: no error for 401
+        state.error = null; // 401 is NOT an error
       })
 
       /* ---------- LOGOUT ---------- */
       .addCase(logoutUser.fulfilled, (state) => {
+        state.user = null;
+        state.isAuthenticated = false;
+        state.error = null;
+      })
+      .addCase(logoutUser.rejected, (state) => {
+        // Even if backend fails, reset frontend auth state
         state.user = null;
         state.isAuthenticated = false;
         state.error = null;

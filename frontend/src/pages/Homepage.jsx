@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { NavLink, useNavigate } from "react-router";
+import { NavLink } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
+
 import axiosClient from "../utils/axiosClient";
 import { logoutUser } from "../authSlice";
 
+/* ================= COMPONENT ================= */
 function Homepage() {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   const [problems, setProblems] = useState([]);
@@ -17,19 +18,8 @@ function Homepage() {
     status: "all",
   });
 
-  /* ================= AUTH GUARD ================= */
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-    }
-  }, [navigate]);
-
   /* ================= FETCH PROBLEMS ================= */
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token || !isAuthenticated) return;
-
     const fetchProblems = async () => {
       try {
         const { data } = await axiosClient.get("/problem/getAllProblem");
@@ -38,6 +28,16 @@ function Homepage() {
         console.error("Error fetching problems:", error);
       }
     };
+
+    fetchProblems();
+  }, []);
+
+  /* ================= FETCH SOLVED (AUTH ONLY) ================= */
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setSolvedProblems([]);
+      return;
+    }
 
     const fetchSolvedProblems = async () => {
       try {
@@ -50,7 +50,6 @@ function Homepage() {
       }
     };
 
-    fetchProblems();
     fetchSolvedProblems();
   }, [isAuthenticated]);
 
@@ -58,7 +57,6 @@ function Homepage() {
   const handleLogout = () => {
     dispatch(logoutUser());
     setSolvedProblems([]);
-    navigate("/login");
   };
 
   /* ================= FILTER ================= */
@@ -91,28 +89,34 @@ function Homepage() {
         </div>
 
         <div className="flex-none gap-3">
-          <div className="dropdown dropdown-end">
-            <div
-              tabIndex={0}
-              className="btn btn-sm btn-outline btn-success"
-            >
-              {user?.firstName}
-            </div>
+          {isAuthenticated ? (
+            <div className="dropdown dropdown-end">
+              <div
+                tabIndex={0}
+                className="btn btn-sm btn-outline btn-success"
+              >
+                {user?.firstName}
+              </div>
 
-            <ul
-              tabIndex={0}
-              className="dropdown-content mt-2 menu p-2 shadow bg-base-100 rounded-box w-48"
-            >
-              {user?.role === "admin" && (
+              <ul
+                tabIndex={0}
+                className="dropdown-content mt-2 menu p-2 shadow bg-base-100 rounded-box w-48"
+              >
+                {user?.role === "admin" && (
+                  <li>
+                    <NavLink to="/admin">Admin</NavLink>
+                  </li>
+                )}
                 <li>
-                  <NavLink to="/admin">Admin</NavLink>
+                  <button onClick={handleLogout}>Logout</button>
                 </li>
-              )}
-              <li>
-                <button onClick={handleLogout}>Logout</button>
-              </li>
-            </ul>
-          </div>
+              </ul>
+            </div>
+          ) : (
+            <NavLink to="/login" className="btn btn-sm btn-success">
+              Login
+            </NavLink>
+          )}
         </div>
       </nav>
 
@@ -137,7 +141,10 @@ function Homepage() {
                 className="select select-sm select-bordered"
                 value={filters.difficulty}
                 onChange={(e) =>
-                  setFilters({ ...filters, difficulty: e.target.value })
+                  setFilters({
+                    ...filters,
+                    difficulty: e.target.value,
+                  })
                 }
               >
                 <option value="all">All Difficulty</option>
@@ -155,7 +162,9 @@ function Homepage() {
               >
                 <option value="all">All Tags</option>
                 <option value="array">Array</option>
-                <option value="linkedList">Linked List</option>
+                <option value="linkedList">
+                  Linked List
+                </option>
                 <option value="graph">Graph</option>
                 <option value="dp">DP</option>
               </select>
@@ -195,13 +204,14 @@ function Homepage() {
                     </div>
                   </div>
 
-                  {solvedProblems.some(
-                    (sp) => sp._id === problem._id
-                  ) && (
-                    <span className="badge badge-success gap-1">
-                      ✓ Solved
-                    </span>
-                  )}
+                  {isAuthenticated &&
+                    solvedProblems.some(
+                      (sp) => sp._id === problem._id
+                    ) && (
+                      <span className="badge badge-success gap-1">
+                        ✓ Solved
+                      </span>
+                    )}
                 </div>
               </div>
             </div>

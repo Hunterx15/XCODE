@@ -1,39 +1,45 @@
 import { useState, useEffect } from "react";
 import axiosClient from "../utils/axiosClient";
 
-const SubmissionHistory = ({ problemId }) => {
+/* ================= COMPONENT ================= */
+function SubmissionHistory({ problemId }) {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
 
+  /* ---------------- FETCH SUBMISSIONS ---------------- */
   useEffect(() => {
     const fetchSubmissions = async () => {
+      setLoading(true);
+      setError(null);
+
       try {
-        setLoading(true);
-        const response = await axiosClient.get(
+        const { data } = await axiosClient.get(
           `/problem/submittedProblem/${problemId}`
         );
-        setSubmissions(response.data || []);
-        setError(null);
+        setSubmissions(data || []);
       } catch (err) {
+        console.error("Failed to fetch submissions", err);
+        setSubmissions([]);
         setError("Failed to fetch submission history");
-        console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSubmissions();
+    if (problemId) {
+      fetchSubmissions();
+    }
   }, [problemId]);
 
   /* ---------------- HELPERS ---------------- */
-
-  const getStatusColor = (status) => {
-    switch (status) {
+  const getStatusColor = (status = "") => {
+    switch (status.toLowerCase()) {
       case "accepted":
         return "badge-success";
       case "wrong":
+      case "failed":
         return "badge-error";
       case "error":
         return "badge-warning";
@@ -44,13 +50,15 @@ const SubmissionHistory = ({ problemId }) => {
     }
   };
 
-  const formatMemory = (memory) =>
-    memory < 1024 ? `${memory} kB` : `${(memory / 1024).toFixed(2)} MB`;
+  const formatMemory = (memory = 0) =>
+    memory < 1024
+      ? `${memory} kB`
+      : `${(memory / 1024).toFixed(2)} MB`;
 
-  const formatDate = (dateString) => new Date(dateString).toLocaleString();
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleString();
 
   /* ---------------- STATES ---------------- */
-
   if (loading) {
     return (
       <div className="flex justify-center items-center py-16">
@@ -68,10 +76,8 @@ const SubmissionHistory = ({ problemId }) => {
   }
 
   /* ---------------- RENDER ---------------- */
-
   return (
     <div className="bg-base-100/50 backdrop-blur border border-base-content/10 rounded-xl p-5">
-      {/* Header */}
       <h2 className="text-xl font-semibold mb-4 text-success">
         Submission History
       </h2>
@@ -79,7 +85,9 @@ const SubmissionHistory = ({ problemId }) => {
       {/* EMPTY STATE */}
       {submissions.length === 0 ? (
         <div className="text-center py-12 text-base-content/60">
-          <p className="text-lg font-medium">No submissions yet</p>
+          <p className="text-lg font-medium">
+            No submissions yet
+          </p>
           <p className="text-sm mt-1">
             Submit your solution to see history here.
           </p>
@@ -104,10 +112,15 @@ const SubmissionHistory = ({ problemId }) => {
 
               <tbody>
                 {submissions.map((sub, index) => (
-                  <tr key={sub._id} className="hover:bg-base-200/40 transition">
+                  <tr
+                    key={sub._id}
+                    className="hover:bg-base-200/40 transition"
+                  >
                     <td>{index + 1}</td>
 
-                    <td className="font-mono text-sm">{sub.language}</td>
+                    <td className="font-mono text-sm">
+                      {sub.language}
+                    </td>
 
                     <td>
                       <span
@@ -119,29 +132,38 @@ const SubmissionHistory = ({ problemId }) => {
                       </span>
                     </td>
 
-                    <td className="font-mono text-sm">{sub.runtime}s</td>
+                    <td className="font-mono text-sm">
+                      {sub.runtime}s
+                    </td>
 
                     <td className="font-mono text-sm">
                       {formatMemory(sub.memory)}
                     </td>
 
                     <td className="font-mono text-sm">
-                      {sub.testCasesPassed}/{sub.testCasesTotal}
+                      {sub.testCasesPassed}/
+                      {sub.testCasesTotal}
                     </td>
 
-                    <td className="text-sm">{formatDate(sub.createdAt)}</td>
+                    <td className="text-sm">
+                      {formatDate(sub.createdAt)}
+                    </td>
 
                     <td>
                       <button
-                        className={`btn btn-sm rounded-full px-4 gap-1 transition-all duration-200
+                        className={`btn btn-sm rounded-full px-4 gap-1 transition-all
                         ${
                           selectedSubmission?._id === sub._id
                             ? "bg-emerald-600/90 text-white border border-emerald-500 shadow-md"
                             : "btn-outline text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/10"
                         }`}
-                        onClick={() => setSelectedSubmission(sub)}
+                        onClick={() =>
+                          setSelectedSubmission(sub)
+                        }
                       >
-                        <span className="font-mono text-xs">{"</>"}</span>
+                        <span className="font-mono text-xs">
+                          {"</>"}
+                        </span>
                         View Code
                       </button>
                     </td>
@@ -167,7 +189,9 @@ const SubmissionHistory = ({ problemId }) => {
 
             <div className="flex flex-wrap gap-2 mb-4">
               <span
-                className={`badge ${getStatusColor(selectedSubmission.status)}`}
+                className={`badge ${getStatusColor(
+                  selectedSubmission.status
+                )}`}
               >
                 {selectedSubmission.status}
               </span>
@@ -175,17 +199,21 @@ const SubmissionHistory = ({ problemId }) => {
                 Runtime: {selectedSubmission.runtime}s
               </span>
               <span className="badge badge-outline">
-                Memory: {formatMemory(selectedSubmission.memory)}
+                Memory:{" "}
+                {formatMemory(selectedSubmission.memory)}
               </span>
               <span className="badge badge-outline">
-                Passed: {selectedSubmission.testCasesPassed}/
+                Passed:{" "}
+                {selectedSubmission.testCasesPassed}/
                 {selectedSubmission.testCasesTotal}
               </span>
             </div>
 
             {selectedSubmission.errorMessage && (
               <div className="alert alert-error mb-3">
-                <span>{selectedSubmission.errorMessage}</span>
+                <span>
+                  {selectedSubmission.errorMessage}
+                </span>
               </div>
             )}
 
@@ -196,7 +224,9 @@ const SubmissionHistory = ({ problemId }) => {
             <div className="modal-action">
               <button
                 className="btn"
-                onClick={() => setSelectedSubmission(null)}
+                onClick={() =>
+                  setSelectedSubmission(null)
+                }
               >
                 Close
               </button>
@@ -206,6 +236,6 @@ const SubmissionHistory = ({ problemId }) => {
       )}
     </div>
   );
-};
+}
 
 export default SubmissionHistory;

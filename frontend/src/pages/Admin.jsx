@@ -1,10 +1,8 @@
-import React, { useState } from "react";
 import { Plus, Edit, Trash2, Video } from "lucide-react";
 import { NavLink } from "react-router";
 
+/* ================= COMPONENT ================= */
 function Admin() {
-  const [selectedOption, setSelectedOption] = useState(null);
-
   const adminOptions = [
     {
       id: "create",
@@ -56,8 +54,9 @@ function Admin() {
 
         {/* ================= OPTIONS GRID ================= */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {adminOptions.map(option => {
+          {adminOptions.map((option) => {
             const Icon = option.icon;
+
             return (
               <div
                 key={option.id}
@@ -65,22 +64,22 @@ function Admin() {
               >
                 <div className="flex flex-col items-center text-center h-full">
                   
-                  {/* Icon */}
+                  {/* ICON */}
                   <div className="mb-4 p-4 rounded-full bg-base-200/60 border border-base-content/10">
                     <Icon size={32} className="text-success" />
                   </div>
 
-                  {/* Title */}
+                  {/* TITLE */}
                   <h2 className="text-xl font-semibold mb-2">
                     {option.title}
                   </h2>
 
-                  {/* Description */}
+                  {/* DESCRIPTION */}
                   <p className="text-base-content/60 mb-6">
                     {option.description}
                   </p>
 
-                  {/* Action */}
+                  {/* ACTION */}
                   <NavLink
                     to={option.route}
                     className={`btn ${option.color} btn-sm mt-auto`}
