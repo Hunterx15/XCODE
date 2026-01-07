@@ -4,10 +4,10 @@ const validate = require("../utils/validator");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-/* -------------------- HELPERS -------------------- */
+/* -------------------- COOKIE OPTIONS -------------------- */
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  maxAge: 60 * 60 * 1000,
+  maxAge: 60 * 60 * 1000, // 1 hour
   secure: process.env.NODE_ENV === "production",
   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
 };
@@ -15,33 +15,51 @@ const COOKIE_OPTIONS = {
 /* -------------------- REGISTER -------------------- */
 const register = async (req, res) => {
   try {
+    // Validate request body
     validate(req.body);
 
-    const { password } = req.body;
-    req.body.password = await bcrypt.hash(password, 10);
-    req.body.role = "user";
+    const { firstName, emailId, password } = req.body;
 
-    const user = await User.create(req.body);
+    // Check if user already exists
+    const existingUser = await User.findOne({ emailId });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
 
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const user = await User.create({
+      firstName,
+      emailId,
+      password: hashedPassword,
+      role: "user",
+    });
+
+    // Generate JWT
     const token = jwt.sign(
       { _id: user._id, emailId: user.emailId, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
+    // Set cookie
     res.cookie("token", token, COOKIE_OPTIONS);
 
-    res.status(201).json({
+    // Send response
+    return res.status(201).json({
       user: {
         firstName: user.firstName,
         emailId: user.emailId,
         _id: user._id,
         role: user.role,
       },
-      message: "Logged in successfully",
+      message: "Registered successfully",
     });
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    console.error("REGISTER ERROR:", err.message);
+    return res.status(400).json({ message: err.message });
   }
 };
 
@@ -72,40 +90,42 @@ const login = async (req, res) => {
 
     res.cookie("token", token, COOKIE_OPTIONS);
 
-    res.status(200).json({
+    return res.status(200).json({
       user: {
         firstName: user.firstName,
         emailId: user.emailId,
         _id: user._id,
         role: user.role,
       },
-      message: "Logged in successfully",
+      message: "Login successful",
     });
   } catch (err) {
-    res.status(500).json({ message: "Login failed" });
+    console.error("LOGIN ERROR:", err.message);
+    return res.status(500).json({ message: "Login failed" });
   }
 };
 
 /* -------------------- LOGOUT -------------------- */
 const logout = async (req, res) => {
   try {
-    const { token } = req.cookies;
-    if (!token) return res.send("Logged out");
+    const token = req.cookies?.token;
 
-    const payload = jwt.decode(token);
-    if (payload?.exp) {
+    if (token) {
       try {
-        await redisClient.set(`token:${token}`, "blocked");
-        await redisClient.expireAt(`token:${token}`, payload.exp);
+        const payload = jwt.decode(token);
+        if (payload?.exp) {
+          await redisClient.set(`token:${token}`, "blocked");
+          await redisClient.expireAt(`token:${token}`, payload.exp);
+        }
       } catch {
-        // Redis failure should NOT crash logout
+        // Redis failure should not crash logout
       }
     }
 
     res.cookie("token", "", { expires: new Date(0) });
-    res.send("Logged out successfully");
-  } catch (err) {
-    res.status(200).send("Logged out");
+    return res.json({ message: "Logged out successfully" });
+  } catch {
+    return res.json({ message: "Logged out" });
   }
 };
 
@@ -114,20 +134,29 @@ const adminRegister = async (req, res) => {
   try {
     validate(req.body);
 
-    req.body.password = await bcrypt.hash(req.body.password, 10);
+    const { firstName, emailId, password, role } = req.body;
 
-    const user = await User.create(req.body);
+    if (role !== "admin") {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
 
-    const token = jwt.sign(
-      { _id: user._id, emailId: user.emailId, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const existingUser = await User.findOne({ emailId });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
 
-    res.cookie("token", token, COOKIE_OPTIONS);
-    res.status(201).json({ message: "Admin registered successfully" });
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await User.create({
+      firstName,
+      emailId,
+      password: hashedPassword,
+      role: "admin",
+    });
+
+    return res.status(201).json({ message: "Admin registered successfully" });
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    return res.status(400).json({ message: err.message });
   }
 };
 
@@ -135,9 +164,9 @@ const adminRegister = async (req, res) => {
 const deleteProfile = async (req, res) => {
   try {
     await User.findByIdAndDelete(req.result._id);
-    res.status(200).send("Deleted successfully");
+    return res.status(200).json({ message: "Deleted successfully" });
   } catch {
-    res.status(500).send("Internal server error");
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 

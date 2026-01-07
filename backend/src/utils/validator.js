@@ -1,21 +1,29 @@
-const validator =require("validator");
+const validator = require("validator");
 
-// req.body 
+const validate = (data) => {
+  const { firstName, emailId, password } = data;
 
-const validate = (data)=>{
-   
-    const mandatoryField = ['firstName',"emailId",'password'];
+  // Required fields
+  if (!firstName || !emailId || !password) {
+    throw new Error("Some field is missing");
+  }
 
-    const IsAllowed = mandatoryField.every((k)=> Object.keys(data).includes(k));
+  // First name length
+  if (firstName.length < 3) {
+    throw new Error("First name must be at least 3 characters");
+  }
 
-    if(!IsAllowed)
-        throw new Error("Some Field Missing");
+  // Email validation
+  if (!validator.isEmail(emailId)) {
+    throw new Error("Invalid email");
+  }
 
-    if(!validator.isEmail(data.emailId))
-        throw new Error("Invalid Email");
+  // Password validation (match frontend rule)
+  if (password.length < 8) {
+    throw new Error("Password must be at least 8 characters");
+  }
 
-    if(!validator.isStrongPassword(data.password))
-        throw new Error("Week Password");
-}
+  return true;
+};
 
 module.exports = validate;
