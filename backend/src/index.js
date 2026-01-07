@@ -12,6 +12,9 @@ const aiRouter = require("./routes/aiChatting");
 const videoRouter = require("./routes/videoCreator");
 const cors = require("cors");
 
+// ✅ REQUIRED for Render + secure cookies
+app.set("trust proxy", 1);
+
 // CORS
 app.use(
   cors({

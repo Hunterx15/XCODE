@@ -4,11 +4,10 @@ const redisClient = createClient({
     username: 'default',
     password: process.env.REDIS_PASS,
     socket: {
-        host: process.env.REDIS_HOST, // Add this to your .env
-        port: process.env.REDIS_PORT  // Add this to your .env
+        host: 'redis-13560.crce263.ap-south-1-1.ec2.cloud.redislabs.com',
+        port: 13560
     }
 });
 
-redisClient.on('error', (err) => console.log('Redis Client Error', err));
-
 module.exports = redisClient;
+
