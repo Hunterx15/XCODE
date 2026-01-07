@@ -11,7 +11,7 @@ const userMiddleware = async (req, res, next) => {
     }
 
     // ✅ Verify token with correct secret
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = jwt.verify(token, process.env.JWT_KEY);
     const { _id } = payload;
 
     if (!_id) {
