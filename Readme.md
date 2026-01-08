@@ -1,31 +1,40 @@
-# 🚀 XCODE
+Perfect 👍
+Below is **clean, copy-paste ready README text** (no explanations, no comments) **AND** an **updated `.env` section** with `REDIS_HOST` and `REDIS_PORT` included.
 
-**XCODE** is a full-stack **DSA & coding practice platform** that helps developers prepare for interviews by solving problems, running code in real time, and getting **AI-powered step-by-step guidance**.
+You can directly paste this into your **README.md**.
+
+---
+
+# 🚀 XCODE – DSA & Coding Practice Platform
+
+**XCODE** is a full-stack **DSA & coding practice platform** that helps developers prepare for interviews by solving problems, running code in real time, and receiving **AI-powered step-by-step guidance**.
+
+🌐 **Live Demo:** [https://xcode-eta.vercel.app/](https://xcode-eta.vercel.app/)
 
 ---
 
 ## ✨ Features
 
-🧠 **DSA Problem Solving Platform** – Practice curated problems for interview preparation.
-📝 **Online Code Editor** – Monaco Editor with multi-language support.
-⚡ **Run & Submit Code** – Execute code against test cases using Judge0.
-📊 **Submission History** – Track previous submissions and results.
-🤖 **AI Assistance (Gemini)** –
+* 🧠 DSA problem-solving platform for interview preparation
+* 📝 Online code editor using Monaco Editor
+* ⚡ Run and submit code with Judge0
+* 📊 Submission history and verdict tracking
+* 🤖 AI assistance using Google Gemini
 
-* Get **hints first**
-* Then receive **step-by-step solutions**
-  💬 **AI Chat for Doubts** – Ask questions related to problems.
-  📚 **Editorial Section** – View structured explanations and solutions.
-  🔐 **Authentication System** – Secure Email & Password based auth.
-  🛡️ **Role-Based Access** – Default role: User (Admin supported internally).
-  📦 **Media Support** – Video solutions & assets via Cloudinary.
-  🌐 **Deployed Web App** – Production-ready application.
+  * Hints-first approach
+  * Step-by-step solution explanations
+* 💬 AI chat for problem-related doubts
+* 📚 Editorial section with structured explanations
+* 🔐 Secure email & password authentication
+* 🛡️ Role-based access control (User / Admin)
+* 📦 Video solutions and media via Cloudinary
+* 🌐 Fully deployed production-ready application
 
 ---
 
 ## 🛠️ Tech Stack
 
-### **Frontend**
+### Frontend
 
 * React 19
 * Vite
@@ -35,33 +44,35 @@
 * Monaco Editor
 * Axios
 * React Hook Form
+* Zod
 * Lucide React
-* Zod (Validation)
 
-### **Backend**
+### Backend
 
 * Node.js
 * Express.js
 * MongoDB + Mongoose
 * Redis
 * JWT Authentication
-* Judge0 (Code Execution)
+* Judge0
 * Google Gemini AI
 * Cloudinary
 * REST APIs
 
 ---
 
-## 🚀 Live Demo
+## 🚀 Deployment
 
-👉 **Production URL:** *(Will be updated after deployment)*
-👉 **Deployment Platform:** **Sevalla**
+* **Frontend:** Vercel
+* **Backend:** Render
+
+🔗 **Live URL:** [https://xcode-eta.vercel.app/](https://xcode-eta.vercel.app/)
 
 ---
 
 ## 🧩 Getting Started
 
-### **Clone the Repository**
+### Clone Repository
 
 ```bash
 git clone https://github.com/Hunterx15/XCODE.git
@@ -70,7 +81,7 @@ cd XCODE
 
 ---
 
-## ⚙️ Backend Setup
+### Backend Setup
 
 ```bash
 cd backend
@@ -78,12 +89,15 @@ npm install
 npm run dev
 ```
 
-Backend runs at:
-👉 **[http://localhost:3000](http://localhost:3000)**
+Backend runs on:
+
+```
+http://localhost:3000
+```
 
 ---
 
-## 💻 Frontend Setup
+### Frontend Setup
 
 ```bash
 cd frontend
@@ -91,22 +105,32 @@ npm install
 npm run dev
 ```
 
-Frontend runs at:
-👉 **[http://localhost:5173](http://localhost:5173)**
+Frontend runs on:
+
+```
+http://localhost:5173
+```
 
 ---
 
 ## 🔑 Environment Variables
 
-### **Backend (.env)**
+### Backend `.env`
 
 ```env
 PORT=3000
+
 DB_CONNECT_STRING=
 JWT_KEY=
+
+REDIS_HOST=
+REDIS_PORT=
 REDIS_PASS=
+
 JUDGE0_KEY=
+
 GEMINI_KEY=
+
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
@@ -116,24 +140,22 @@ CLOUDINARY_API_SECRET=
 
 ## 🧠 AI Integration
 
-XCODE uses **Google Gemini AI** to enhance learning:
-
-1. User requests help
-2. AI provides **hints first**
-3. Then gives **step-by-step solution explanation**
-4. AI understands **problem context** for accurate guidance
+1. User requests help on a problem
+2. AI provides hints first
+3. AI then gives step-by-step explanations
+4. AI understands full problem context
 
 ---
 
 ## ⚙️ Code Execution
 
-* Powered by **Judge0**
-* Supported Languages:
+* Powered by Judge0
+* Secure sandboxed execution
+* Supported languages:
 
-  * **C++**
-  * **Java**
-  * **JavaScript**
-* Secure, sandboxed execution environment
+  * C++
+  * Java
+  * JavaScript
 
 ---
 
@@ -167,32 +189,18 @@ XCODE/
 
 ---
 
-## 🚀 Deployment
-
-XCODE is deployed using **Sevalla**.
-
-### **Build Commands**
-
-```bash
-npm run build
-npm run start
-```
-
----
-
 ## 🎯 Target Audience
 
-* College Students
-* Interview Preparation
-* Competitive Programmers
+* College students
+* Interview preparation
+* Competitive programmers
 * Beginners in DSA
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome!
-Feel free to:
+Contributions are welcome.
 
 * Open issues
 * Submit pull requests
@@ -203,7 +211,15 @@ Feel free to:
 ## 📜 License
 
 MIT License © 2025
-**Author:** [Hunterx15](https://github.com/Hunterx15)
+**Author:** Hunterx15
 
+---
 
+If you want next:
 
+* 🔥 **Resume bullets**
+* 🔥 **LinkedIn project post**
+* 🔥 **Production deployment checklist**
+* 🔥 **System design explanation**
+
+Just say the word 🚀
