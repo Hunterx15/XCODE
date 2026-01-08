@@ -1,10 +1,3 @@
-Perfect 👍
-Below is **clean, copy-paste ready README text** (no explanations, no comments) **AND** an **updated `.env` section** with `REDIS_HOST` and `REDIS_PORT` included.
-
-You can directly paste this into your **README.md**.
-
----
-
 # 🚀 XCODE – DSA & Coding Practice Platform
 
 **XCODE** is a full-stack **DSA & coding practice platform** that helps developers prepare for interviews by solving problems, running code in real time, and receiving **AI-powered step-by-step guidance**.
@@ -213,13 +206,3 @@ Contributions are welcome.
 MIT License © 2025
 **Author:** Hunterx15
 
----
-
-If you want next:
-
-* 🔥 **Resume bullets**
-* 🔥 **LinkedIn project post**
-* 🔥 **Production deployment checklist**
-* 🔥 **System design explanation**
-
-Just say the word 🚀
