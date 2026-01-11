@@ -24,11 +24,9 @@ function App() {
   );
 
   useEffect(() => {
-    if (!authChecked.current) {
-      dispatch(checkAuth());
-      authChecked.current = true;
-    }
-  }, [dispatch]);
+  dispatch(checkAuth());
+}, [dispatch]);
+
 
   if (loading) {
     return (
