@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { checkAuth } from "./authSlice";
 
@@ -17,20 +17,24 @@ import AdminUpload from "./components/AdminUpload";
 
 function App() {
   const dispatch = useDispatch();
+  const authChecked = useRef(false);
 
   const { isAuthenticated, user, loading } = useSelector(
     (state) => state.auth
   );
 
   useEffect(() => {
-    dispatch(checkAuth());
-  }, [dispatch]);
+  dispatch(checkAuth());
+}, [dispatch]);
 
-  const Loader = () => (
-    <div className="min-h-screen flex items-center justify-center">
-      <span className="loading loading-spinner loading-lg"></span>
-    </div>
-  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    );
+  }
 
   return (
     <Routes>
@@ -38,9 +42,7 @@ function App() {
       <Route
         path="/"
         element={
-          loading ? (
-            <Loader />
-          ) : isAuthenticated ? (
+          isAuthenticated ? (
             <Homepage />
           ) : (
             <Navigate to="/signup" replace />
@@ -48,7 +50,7 @@ function App() {
         }
       />
 
-      {/* AUTH (PUBLIC) */}
+      {/* AUTH */}
       <Route
         path="/login"
         element={
@@ -66,13 +68,11 @@ function App() {
       {/* PUBLIC */}
       <Route path="/problem/:problemId" element={<ProblemPage />} />
 
-      {/* ADMIN ROUTES */}
+      {/* ADMIN */}
       <Route
         path="/admin"
         element={
-          loading ? (
-            <Loader />
-          ) : isAuthenticated && user?.role === "admin" ? (
+          isAuthenticated && user?.role === "admin" ? (
             <Admin />
           ) : (
             <Navigate to="/signup" replace />
@@ -83,9 +83,7 @@ function App() {
       <Route
         path="/admin/create"
         element={
-          loading ? (
-            <Loader />
-          ) : isAuthenticated && user?.role === "admin" ? (
+          isAuthenticated && user?.role === "admin" ? (
             <AdminPanel />
           ) : (
             <Navigate to="/signup" replace />
@@ -96,9 +94,7 @@ function App() {
       <Route
         path="/admin/delete"
         element={
-          loading ? (
-            <Loader />
-          ) : isAuthenticated && user?.role === "admin" ? (
+          isAuthenticated && user?.role === "admin" ? (
             <AdminDelete />
           ) : (
             <Navigate to="/signup" replace />
@@ -109,9 +105,7 @@ function App() {
       <Route
         path="/admin/video"
         element={
-          loading ? (
-            <Loader />
-          ) : isAuthenticated && user?.role === "admin" ? (
+          isAuthenticated && user?.role === "admin" ? (
             <AdminVideo />
           ) : (
             <Navigate to="/signup" replace />
@@ -122,9 +116,7 @@ function App() {
       <Route
         path="/admin/upload/:problemId"
         element={
-          loading ? (
-            <Loader />
-          ) : isAuthenticated && user?.role === "admin" ? (
+          isAuthenticated && user?.role === "admin" ? (
             <AdminUpload />
           ) : (
             <Navigate to="/signup" replace />
