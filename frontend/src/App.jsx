@@ -17,23 +17,17 @@ import AdminUpload from "./components/AdminUpload";
 
 function App() {
   const dispatch = useDispatch();
-
-  // 🔒 prevents multiple auth calls (StrictMode + re-render safe)
   const authChecked = useRef(false);
 
   const { isAuthenticated, user, loading } = useSelector(
     (state) => state.auth
   );
 
-  // ✅ run auth check ONLY ONCE
   useEffect(() => {
-    if (!authChecked.current) {
-      authChecked.current = true;
-      dispatch(checkAuth());
-    }
-  }, [dispatch]);
+  dispatch(checkAuth());
+}, [dispatch]);
 
-  // ⏳ global loader
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -48,11 +42,15 @@ function App() {
       <Route
         path="/"
         element={
-          isAuthenticated ? <Homepage /> : <Navigate to="/signup" replace />
+          isAuthenticated ? (
+            <Homepage />
+          ) : (
+            <Navigate to="/signup" replace />
+          )
         }
       />
 
-      {/* AUTH ROUTES */}
+      {/* AUTH */}
       <Route
         path="/login"
         element={
@@ -70,7 +68,7 @@ function App() {
       {/* PUBLIC */}
       <Route path="/problem/:problemId" element={<ProblemPage />} />
 
-      {/* ADMIN ROUTES */}
+      {/* ADMIN */}
       <Route
         path="/admin"
         element={

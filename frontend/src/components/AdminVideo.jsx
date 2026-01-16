@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axiosClient from "../utils/axiosClient";
-import { NavLink } from "react-router";
+import { NavLink } from "react-router-dom";
 
 /* ---------- HELPER ---------- */
 const getDifficultyBadge = (difficulty) => {
