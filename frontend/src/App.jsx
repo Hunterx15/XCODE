@@ -19,14 +19,17 @@ function App() {
   const dispatch = useDispatch();
   const authChecked = useRef(false);
 
-  const { isAuthenticated, user, loading } = useSelector(
-    (state) => state.auth
-  );
+  const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
 
   useEffect(() => {
-  dispatch(checkAuth());
-}, [dispatch]);
-
+    if (
+      !authChecked.current &&
+      !["/login", "/signup"].includes(location.pathname)
+    ) {
+      dispatch(checkAuth());
+      authChecked.current = true;
+    }
+  }, [dispatch, location.pathname]);
 
   if (loading) {
     return (
@@ -42,27 +45,19 @@ function App() {
       <Route
         path="/"
         element={
-          isAuthenticated ? (
-            <Homepage />
-          ) : (
-            <Navigate to="/signup" replace />
-          )
+          isAuthenticated ? <Homepage /> : <Navigate to="/signup" replace />
         }
       />
 
       {/* AUTH */}
       <Route
         path="/login"
-        element={
-          isAuthenticated ? <Navigate to="/" replace /> : <Login />
-        }
+        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
       />
 
       <Route
         path="/signup"
-        element={
-          isAuthenticated ? <Navigate to="/" replace /> : <Signup />
-        }
+        element={isAuthenticated ? <Navigate to="/" replace /> : <Signup />}
       />
 
       {/* PUBLIC */}
