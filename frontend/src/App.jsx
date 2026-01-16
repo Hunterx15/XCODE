@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useRef } from "react";
 
@@ -21,6 +21,7 @@ function App() {
 
   const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
 
+  const location = useLocation();
   useEffect(() => {
     if (
       !authChecked.current &&
