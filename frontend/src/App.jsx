@@ -24,11 +24,9 @@ function App() {
   );
 
   useEffect(() => {
-    if (!authChecked.current) {
-      dispatch(checkAuth());
-      authChecked.current = true;
-    }
-  }, [dispatch]);
+  dispatch(checkAuth());
+}, [dispatch]);
+
 
   if (loading) {
     return (
@@ -40,13 +38,19 @@ function App() {
 
   return (
     <Routes>
+      {/* ROOT (PROTECTED) */}
       <Route
         path="/"
         element={
-          isAuthenticated ? <Homepage /> : <Navigate to="/signup" replace />
+          isAuthenticated ? (
+            <Homepage />
+          ) : (
+            <Navigate to="/signup" replace />
+          )
         }
       />
 
+      {/* AUTH */}
       <Route
         path="/login"
         element={
@@ -61,8 +65,10 @@ function App() {
         }
       />
 
+      {/* PUBLIC */}
       <Route path="/problem/:problemId" element={<ProblemPage />} />
 
+      {/* ADMIN */}
       <Route
         path="/admin"
         element={
