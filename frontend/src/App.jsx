@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useRef } from "react";
 
@@ -17,17 +17,23 @@ import AdminUpload from "./components/AdminUpload";
 
 function App() {
   const dispatch = useDispatch();
+
+  // 🔒 prevents multiple auth calls (StrictMode + re-render safe)
   const authChecked = useRef(false);
 
   const { isAuthenticated, user, loading } = useSelector(
     (state) => state.auth
   );
 
+  // ✅ run auth check ONLY ONCE
   useEffect(() => {
-  dispatch(checkAuth());
-}, [dispatch]);
+    if (!authChecked.current) {
+      authChecked.current = true;
+      dispatch(checkAuth());
+    }
+  }, [dispatch]);
 
-
+  // ⏳ global loader
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -42,15 +48,11 @@ function App() {
       <Route
         path="/"
         element={
-          isAuthenticated ? (
-            <Homepage />
-          ) : (
-            <Navigate to="/signup" replace />
-          )
+          isAuthenticated ? <Homepage /> : <Navigate to="/signup" replace />
         }
       />
 
-      {/* AUTH */}
+      {/* AUTH ROUTES */}
       <Route
         path="/login"
         element={
@@ -68,7 +70,7 @@ function App() {
       {/* PUBLIC */}
       <Route path="/problem/:problemId" element={<ProblemPage />} />
 
-      {/* ADMIN */}
+      {/* ADMIN ROUTES */}
       <Route
         path="/admin"
         element={
