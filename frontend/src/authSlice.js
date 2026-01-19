@@ -31,7 +31,7 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-/* ===================== CHECK AUTH ===================== */
+/* ===================== CHECK AUTH (NON-BLOCKING) ===================== */
 export const checkAuth = createAsyncThunk(
   "auth/check",
   async (_, { rejectWithValue }) => {
@@ -39,7 +39,7 @@ export const checkAuth = createAsyncThunk(
       const res = await axiosClient.get("/user/check");
       return res.data.user;
     } catch (error) {
-      // 401 = not logged in (NORMAL, not an error)
+      // 401 = not logged in → NORMAL CASE
       if (error.response?.status === 401) {
         return rejectWithValue(null);
       }
@@ -58,7 +58,6 @@ export const logoutUser = createAsyncThunk(
       await axiosClient.post("/user/logout");
       return null;
     } catch (error) {
-      // Even if logout fails on backend, frontend should reset state
       return rejectWithValue(
         error.response?.data || { message: "Logout failed" }
       );
@@ -72,7 +71,7 @@ const authSlice = createSlice({
   initialState: {
     user: null,
     isAuthenticated: false,
-    loading: true, // IMPORTANT: true until checkAuth finishes
+    loading: false,     // ✅ NEVER block initial render
     error: null,
   },
   reducers: {},
@@ -110,21 +109,16 @@ const authSlice = createSlice({
         state.error = action.payload?.message || null;
       })
 
-      /* ---------- CHECK AUTH ---------- */
-      .addCase(checkAuth.pending, (state) => {
-        state.loading = true;
-      })
+      /* ---------- CHECK AUTH (CRITICAL FIX) ---------- */
       .addCase(checkAuth.fulfilled, (state, action) => {
-        state.loading = false;
         state.user = action.payload;
         state.isAuthenticated = true;
         state.error = null;
       })
       .addCase(checkAuth.rejected, (state) => {
-        state.loading = false;
         state.user = null;
         state.isAuthenticated = false;
-        state.error = null; // 401 is NOT an error
+        state.error = null;
       })
 
       /* ---------- LOGOUT ---------- */
@@ -134,7 +128,6 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(logoutUser.rejected, (state) => {
-        // Even if backend fails, reset frontend auth state
         state.user = null;
         state.isAuthenticated = false;
         state.error = null;
